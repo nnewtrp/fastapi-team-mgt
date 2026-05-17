@@ -14,3 +14,14 @@ class Team(BaseModel):
     teamId: str
     name: str
     isDeleted: bool
+
+
+class TeamResponse(BaseModel):
+    data: Team
+    isSuccess: bool = True
+
+
+class TeamListResponse(BaseModel):
+    totalItems: int
+    data: list[Team]
+    isSuccess: bool = True
