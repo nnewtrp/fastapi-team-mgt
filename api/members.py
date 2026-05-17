@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from database import members_collection, teams_collection
 from models.members import (
     Member,
     MemberCreate,
+    MemberDetail,
+    MemberDetailResponse,
     MemberListResponse,
     MemberResponse,
     MemberUpdate,
@@ -26,18 +28,29 @@ async def _ensure_team_exists(team_id: str) -> None:
 
 
 @router.get("", response_model=MemberListResponse)
-async def list_members():
-    cursor = members_collection.find({})
+async def list_members(
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(10, ge=1, le=100),
+):
+    total = await members_collection.count_documents({})
+    cursor = members_collection.find({}).skip((page - 1) * pageSize).limit(pageSize)
     data = [_serialize(doc) async for doc in cursor]
-    return MemberListResponse(totalItems=len(data), data=data)
+    return MemberListResponse(totalItems=total, page=page, pageSize=pageSize, data=data)
 
 
-@router.get("/{name}", response_model=MemberResponse)
+@router.get("/{name}", response_model=MemberDetailResponse)
 async def get_member(name: str):
     doc = await members_collection.find_one({"name": name})
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
-    return MemberResponse(data=_serialize(doc))
+    team = await teams_collection.find_one({"teamId": doc["teamId"]})
+    detail = MemberDetail(
+        name=doc["name"],
+        teamId=doc["teamId"],
+        teamName=team["name"] if team else None,
+        number=doc["number"],
+    )
+    return MemberDetailResponse(data=detail)
 
 
 @router.post("", response_model=MemberResponse, status_code=status.HTTP_201_CREATED)

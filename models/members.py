@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -18,12 +20,31 @@ class Member(BaseModel):
     number: int
 
 
+class MemberSummary(BaseModel):
+    name: str
+    number: int
+
+
+class MemberDetail(BaseModel):
+    name: str
+    teamId: str
+    teamName: Optional[str] = None
+    number: int
+
+
 class MemberResponse(BaseModel):
     data: Member
     isSuccess: bool = True
 
 
+class MemberDetailResponse(BaseModel):
+    data: MemberDetail
+    isSuccess: bool = True
+
+
 class MemberListResponse(BaseModel):
     totalItems: int
+    page: int
+    pageSize: int
     data: list[Member]
     isSuccess: bool = True
