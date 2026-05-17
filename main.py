@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
+from api.members import router as members_router
 from api.teams import router as teams_router
 
 load_dotenv()
@@ -29,6 +30,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 app.include_router(teams_router, prefix=os.environ["API_PREFIX"])
+app.include_router(members_router, prefix=os.environ["API_PREFIX"])
 
 @app.get("/")
 def read_root():
